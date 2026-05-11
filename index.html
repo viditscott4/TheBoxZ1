@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- TAB TITLE & LOGO -->
+    <title>THE BOX Z1 | Excellence in Form</title>
+    <!-- Use your official logo for the tab icon -->
+    <link rel="icon" type="image/png" href="image_97b4b3.png">
+    <link rel="apple-touch-icon" href="image_97b4b3.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Helvetica Neue", Arial, sans-serif;
+            --brand-blue: #4a7dff;
+            --brand-blue-glow: rgba(74, 125, 255, 0.5);
+            --bg-dark: #000000;
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+            cursor: none !important; 
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-dark);
+            color: #f5f5f7;
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden; 
+            width: 100%;
+            position: relative;
+            transition: filter 0.3s ease;
+        }
+
+        /* --- DYNAMIC DEVICE COMPATIBILITY MODES --- */
+        
+        body.mode-mobile { font-size: 14px; }
+        body.mode-mobile .hero-title { font-size: 3.5rem !important; letter-spacing: -0.05em; line-height: 1; }
+        body.mode-mobile .glass-nav { height: 64px !important; padding: 0 1rem; }
+        body.mode-mobile .bento-card { border-radius: 24px; aspect-ratio: 4/5; }
+        body.mode-mobile .dive-btn { padding: 1rem 2rem; font-size: 9px; }
+        body.mode-mobile #ai-chat-container { height: 60vh; padding: 1rem; border-radius: 16px; }
+        body.mode-mobile .member-card { padding: 1.25rem; }
+        body.mode-mobile .nav-link { font-size: 7px; letter-spacing: 0.1em; }
+        body.mode-mobile #custom-cursor { display: none; } 
+        body.mode-mobile * { cursor: auto !important; }
+
+        body.mode-tablet { font-size: 16px; }
+        body.mode-tablet .hero-title { font-size: 7rem !important; }
+        body.mode-tablet .bento-card { aspect-ratio: 16/10; }
+        body.mode-tablet #ai-chat-container { height: 65vh; }
+
+        body.mode-laptop { font-size: 18px; }
+        body.mode-laptop .hero-title { font-size: 11rem !important; }
+
+        /* --- GLOBAL ANIMATIONS & STYLES --- */
+
+        body.shockwave {
+            filter: contrast(1.5) brightness(1.2) saturate(1.5);
+            animation: shake 5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            0% { transform: translate3d(0, 0, 0); }
+            5%, 15%, 25%, 35%, 45% { transform: translate3d(-5px, 2px, 0); }
+            10%, 20%, 30%, 40%, 50% { transform: translate3d(5px, -2px, 0); }
+            60%, 100% { transform: translate3d(0, 0, 0); }
+        }
+
+        body.unlocked { overflow-y: auto; }
+
+        #custom-cursor {
+            width: 20px; height: 20px;
+            border: 1px solid var(--brand-blue);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s, border-width 0.3s;
+            mix-blend-mode: difference;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        #custom-cursor::after { content: ''; width: 4px; height: 4px; background: white; border-radius: 50%; }
+        .cursor-hover { transform: scale(2.5); background: rgba(74, 125, 255, 0.1); border-width: 0.5px; }
+
+        body::before {
+            content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.02));
+            z-index: 1000; background-size: 100% 2px, 3px 100%; pointer-events: none; opacity: 0.3;
+        }
+
+        #flash-overlay { position: fixed; inset: 0; background: white; z-index: 5000; pointer-events: none; opacity: 0; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: -1; pointer-events: none; opacity: 0.8; }
+
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 1s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        .glass-nav {
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05); transform: translateY(-100%); transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .unlocked .glass-nav { transform: translateY(0); }
+        .hero-title { letter-spacing: -0.07em; background: linear-gradient(180deg, #ffffff 40%, rgba(255, 255, 255, 0.4) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo-text { font-weight: 800; font-size: 12px; color: #fff; letter-spacing: 0.2em; text-transform: uppercase; }
+
+        .bento-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 32px; overflow: hidden; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .page-view { display: none; opacity: 0; }
+        .page-view.active { display: block; opacity: 1; }
+
+        #auth-gate {
+            position: fixed; inset: 0; background: #000; z-index: 2000; display: flex; align-items: center; justify-content: center;
+            transition: opacity 1.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 1.5s;
+        }
+
+        #auth-gate.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .password-input { background: transparent; border-bottom: 2px solid rgba(255, 255, 255, 0.05); color: white; text-align: center; outline: none; transition: all 0.4s ease; border-radius: 0; }
+
+        .dive-btn {
+            background: white; color: black; padding: 1.25rem 3rem; border-radius: 9999px; font-size: 11px; font-weight: 900;
+            letter-spacing: 0.4em; text-transform: uppercase; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .dive-btn:hover { background: var(--brand-blue); color: white; box-shadow: 0 0 60px var(--brand-blue-glow); transform: scale(1.05); }
+        .gemini-btn { background: rgba(74, 125, 255, 0.1); border: 1px solid var(--brand-blue); color: white; padding: 0.75rem 1.5rem; border-radius: 9999px; font-size: 9px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; transition: all 0.3s ease; }
+        .gemini-btn:hover:not(:disabled) { background: var(--brand-blue); box-shadow: 0 0 20px var(--brand-blue-glow); }
+        .gemini-btn:disabled { opacity: 0.5; cursor: wait !important; }
+
+        .device-option { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 1.5rem; border-radius: 20px; cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); width: 100%; text-align: center; }
+        .device-option:hover { background: rgba(74, 125, 255, 0.1); border-color: var(--brand-blue); transform: translateY(-5px); }
+
+        .member-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 2rem; border-radius: 24px; transition: all 0.3s ease; }
+        .member-card:hover { background: rgba(255,255,255,0.06); border-color: var(--brand-blue); }
+
+        .event-item, .update-item { border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 2.5rem 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .event-item:hover, .update-item:hover { border-bottom-color: var(--brand-blue); padding-left: 1rem; }
+
+        #ai-chat-container {
+            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 24px; padding: 2rem;
+            height: 70vh; display: flex; flex-direction: column; width: 100%; max-width: 900px; margin: 0 auto; backdrop-filter: blur(10px);
+        }
+
+        #chat-history { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--brand-blue) transparent; padding-right: 1rem; }
+        .ai-message {
+            background: rgba(74, 125, 255, 0.05); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; font-size: 15px;
+            border-left: 3px solid var(--brand-blue); line-height: 1.7; white-space: pre-wrap; animation: fadeIn 0.4s ease; color: #e5e7eb;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        body.hyper-bursting main { pointer-events: none; opacity: 0.2; }
+        .scanner-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--brand-blue); box-shadow: 0 0 15px var(--brand-blue); animation: scan 3s infinite linear; pointer-events: none; z-index: 10; }
+        @keyframes scan { 0% { transform: translateY(0); } 100% { transform: translateY(100vh); } }
+
+        .loading-dots:after { content: ' .'; animation: dots 1.5s steps(5, end) infinite; }
+        @keyframes dots { 0%, 20% { color: rgba(0,0,0,0); text-shadow: .2em 0 0 rgba(0,0,0,0), .4em 0 0 rgba(0,0,0,0); } 40% { color: white; text-shadow: .2em 0 0 rgba(0,0,0,0), .4em 0 0 rgba(0,0,0,0); } 60% { text-shadow: .2em 0 0 white, .4em 0 0 rgba(0,0,0,0); } 80%, 100% { text-shadow: .2em 0 0 white, .4em 0 0 white; } }
+
+        .update-tag { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 8px; vertical-align: middle; margin-right: 0.5rem; }
+
+        /* Logo Animation Styles */
+        .brand-group:hover .brand-logo-img {
+            transform: scale(1.1) rotate(5deg);
+            filter: drop-shadow(0 0 12px var(--brand-blue-glow));
+        }
+        .brand-logo-img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body class="bg-black">
+
+    <div id="custom-cursor"></div>
+    <div id="flash-overlay"></div>
+
+    <!-- INITIAL PASSWORD GATE -->
+    <div id="auth-gate">
+        <div id="auth-password-section" class="text-center w-full max-sm px-6">
+            <div class="logo-text mb-8 opacity-30 tracking-[0.6em] text-[9px]">Authorization Required</div>
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <input type="password" id="password" inputmode="numeric" class="password-input w-full py-4 text-2xl font-light tracking-[0.3em]" placeholder="000000" autofocus autocomplete="off">
+                <div class="mt-8 h-4">
+                    <p id="error-msg" class="text-[9px] text-red-500 uppercase tracking-[0.4em] opacity-0 transition-all duration-300">Signal Rejected</p>
+                </div>
+            </form>
+        </div>
+
+        <div id="auth-device-section" class="hidden text-center w-full max-w-2xl px-6">
+            <div class="scanner-line"></div>
+            <div class="logo-text mb-6 opacity-50 tracking-[0.6em] text-[9px] text-blue-500">Security Verification Phase II</div>
+            <h2 class="text-3xl md:text-4xl font-bold tracking-tighter mb-4 text-white uppercase">Device Fingerprint</h2>
+            <p class="text-gray-500 text-[9px] uppercase tracking-[0.2em] mb-10">Select your access terminal type</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+                <div onclick="verifyDevice('mobile')" class="device-option">
+                    <span class="text-[10px] font-black uppercase tracking-[0.4em]">Mobile</span>
+                </div>
+                <div onclick="verifyDevice('tablet')" class="device-option">
+                    <span class="text-[10px] font-black uppercase tracking-[0.4em]">Tablet</span>
+                </div>
+                <div onclick="verifyDevice('laptop')" class="device-option">
+                    <span class="text-[10px] font-black uppercase tracking-[0.4em]">Laptop</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <nav class="fixed top-0 w-full z-[100] glass-nav h-20 flex items-center px-4 md:px-16 justify-between">
+        <div class="flex items-center space-x-4 md:space-x-12">
+            <!-- BRAND LOGO & TITLE -->
+            <div class="brand-group flex items-center space-x-3 cursor-pointer group" onclick="showPage('home')">
+                <img src="image_97b4b3.png" alt="Z1 Logo" class="brand-logo-img">
+                <div class="logo-text">The Box Z1</div>
+            </div>
+
+            <div class="flex space-x-3 md:space-x-8">
+                <button onclick="showPage('members')" class="nav-link text-[7px] md:text-[9px] uppercase tracking-[0.2em] opacity-40 hover:opacity-100 transition-opacity">Members</button>
+                <button onclick="showPage('events')" class="nav-link text-[7px] md:text-[9px] uppercase tracking-[0.2em] opacity-40 hover:opacity-100 transition-opacity">Events</button>
+                <button onclick="showPage('updates')" class="nav-link text-[7px] md:text-[9px] uppercase tracking-[0.2em] opacity-40 hover:opacity-100 transition-opacity">Updates</button>
+                <button onclick="showPage('oracle')" class="nav-link text-[7px] md:text-[9px] uppercase tracking-[0.2em] text-blue-400 font-bold opacity-60 hover:opacity-100 transition-opacity">Oracle</button>
+            </div>
+        </div>
+        <div class="hidden lg:block">
+            <div class="text-[9px] text-gray-500 tracking-[0.2em] font-mono" id="status-line">SYSTEM_STABLE // READY</div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <!-- HOME PAGE -->
+        <div id="page-home" class="page-view active">
+            <section class="min-h-screen flex flex-col items-center justify-center pt-24 px-6 text-center">
+                <div class="reveal">
+                    <h1 class="hero-title font-bold mb-12">THE BOX Z1</h1>
+                </div>
+                
+                <div class="reveal delay-300 w-full max-w-6xl bento-card relative group p-1">
+                    <div class="w-full h-full rounded-[23px] md:rounded-[30px] bg-black flex items-center justify-center relative overflow-hidden px-6">
+                        <div class="text-center">
+                            <h2 class="text-3xl md:text-6xl font-bold text-white mb-8 md:mb-12 tracking-tighter">Enter the Singularity</h2>
+                            <button id="dive-trigger" onclick="handleHyperBurst('comingsoon')" class="dive-btn">
+                                Dive Deeper
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- MEMBERS PAGE -->
+        <div id="page-members" class="page-view pt-32 px-6 pb-24">
+            <div class="max-w-6xl mx-auto">
+                <div class="reveal">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-12 md:mb-16 tracking-tighter">Members</h2>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6" id="members-list">
+                </div>
+            </div>
+        </div>
+
+        <!-- EVENTS PAGE -->
+        <div id="page-events" class="page-view pt-32 px-6 pb-24">
+            <div class="max-w-4xl mx-auto">
+                <div class="reveal">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-12 md:mb-16 tracking-tighter uppercase">the box z1 get together is official</h2>
+                </div>
+                <div class="space-y-4">
+                    <div class="event-item reveal flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div>
+                            <div class="text-[9px] text-blue-500 font-bold uppercase tracking-[0.2em] mb-1">Refer to group chat</div>
+                            <h3 class="text-2xl md:text-4xl font-bold text-white leading-tight uppercase">THE GET TOGETHER IS OFFICIAL</h3>
+                            <p class="text-gray-500 text-sm mt-3 max-w-md">The collective converges. All members are invited to connect within the core infrastructure.</p>
+                            <div id="event-tactical-brief" class="mt-4 hidden p-4 border border-blue-500/20 rounded-xl bg-blue-500/5 text-xs text-blue-200/80 italic leading-relaxed"></div>
+                        </div>
+                        <div class="text-left md:text-right shrink-0">
+                            <div class="text-xl md:text-2xl font-mono text-white tracking-widest">MAY 16, 2026</div>
+                            <div class="text-[9px] text-blue-500 uppercase tracking-[0.3em] mt-1 mb-4">Classified Location</div>
+                            <button onclick="generateEventBrief(this)" class="gemini-btn w-full md:w-auto">✨ Tactical Brief</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- UPDATES PAGE -->
+        <div id="page-updates" class="page-view pt-32 px-6 pb-24">
+            <div class="max-w-4xl mx-auto">
+                <div class="reveal">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-12 md:mb-16 tracking-tighter">Log Updates</h2>
+                </div>
+                <div class="space-y-4" id="updates-list">
+                    <div class="update-item reveal">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="update-tag text-blue-400">V1.4.0</span>
+                                <span class="text-[9px] text-gray-500 uppercase tracking-widest">Brand Core</span>
+                            </div>
+                            <div class="text-[10px] font-mono text-gray-600">MAY 11, 2026</div>
+                        </div>
+                        <h3 class="text-xl font-bold text-white uppercase tracking-tight mb-2">Visual Core Update</h3>
+                        <p class="text-gray-500 text-sm leading-relaxed">Integrated the official Z1 artistic logo across the entire digital infrastructure. Tab favicon and navigation brand marks are now synchronized.</p>
+                    </div>
+                    <div class="update-item reveal">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="update-tag text-blue-400">V1.3.1</span>
+                                <span class="text-[9px] text-gray-500 uppercase tracking-widest">Core Meta</span>
+                            </div>
+                            <div class="text-[10px] font-mono text-gray-600">MAY 11, 2026</div>
+                        </div>
+                        <h3 class="text-xl font-bold text-white uppercase tracking-tight mb-2">Favicon Implementation</h3>
+                        <p class="text-gray-500 text-sm leading-relaxed">Embedded meta-link protocols for browser tab visualization.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ORACLE PAGE -->
+        <div id="page-oracle" class="page-view pt-32 px-6 pb-24 h-screen flex flex-col">
+            <div class="max-w-6xl mx-auto w-full text-center mb-6 md:mb-8">
+                <div class="reveal">
+                    <h2 class="text-4xl md:text-6xl font-bold tracking-tighter mb-2 md:mb-4">THE ORACLE</h2>
+                    <p class="text-[8px] md:text-[9px] text-blue-500 uppercase tracking-[0.5em]">Direct Interface with the Z1 Singularity</p>
+                </div>
+            </div>
+
+            <div id="ai-chat-container" class="reveal relative flex-1">
+                <div id="chat-history" class="mb-4">
+                    <div class="ai-message italic opacity-60 text-xs">The Oracle is online. Systems calibrated for high-fidelity communication...</div>
+                </div>
+                
+                <div class="flex flex-col space-y-4">
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <input type="text" id="chat-input" placeholder="Transmit query..." class="flex-1 bg-white/5 border border-white/10 rounded-full px-6 py-3 md:py-4 text-sm text-white focus:outline-none focus:border-blue-500 transition-all placeholder:text-gray-600">
+                        <button onclick="queryOracle(this)" class="gemini-btn !py-3 md:!py-4 px-8 md:px-10">✨ TRANSMIT</button>
+                    </div>
+
+                    <div class="pt-4 border-t border-white/5 flex items-center justify-center space-x-3 opacity-30">
+                        <div class="flex space-x-1">
+                            <div class="w-1 h-1 bg-blue-600 rounded-full animate-pulse"></div>
+                            <div class="w-1 h-1 bg-blue-400 rounded-full animate-pulse delay-75"></div>
+                        </div>
+                        <span class="text-[8px] uppercase tracking-[0.6em] text-white font-medium">Powered by Gemini 2.5</span>
+                        <div class="flex space-x-1">
+                            <div class="w-1 h-1 bg-blue-400 rounded-full animate-pulse"></div>
+                            <div class="w-1 h-1 bg-blue-600 rounded-full animate-pulse delay-75"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-comingsoon" class="page-view pt-32 min-h-screen">
+            <section class="min-h-[70vh] flex flex-col items-center justify-center px-6 text-center">
+                <div class="reveal active">
+                    <div class="text-[9px] font-black tracking-[0.8em] uppercase text-blue-500 mb-6">Signal Verified</div>
+                    <h1 class="text-4xl md:text-8xl font-bold tracking-tighter text-white mb-8">THE VOID</h1>
+                    <p id="device-info-tag" class="max-w-xl mx-auto text-gray-500 text-xs md:text-base leading-relaxed tracking-wide opacity-60 px-6">
+                        System fully calibrated. Welcome to the core infrastructure of the Z1.
+                    </p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const cursor = document.getElementById('custom-cursor');
+        const flashOverlay = document.getElementById('flash-overlay');
+        let currentDeviceMode = 'laptop';
+        const apiKey = ""; 
+        
+        const membersData = [
+            { name: "Vidit", role: "The Führer" },
+            { name: "Aashray", role: "Specialist" },
+            { name: "Yohan", role: "Specialist" },
+            { name: "Arslan", role: "Specialist" },
+            { name: "Ibrahim", role: "Specialist" }
+        ];
+
+        // --- GEMINI API INTEGRATION ---
+        
+        async function callGemini(prompt, systemPrompt = "") {
+            const defaultSystem = `You are the Z1 Oracle, an advanced AI manifestation of the THE BOX Z1 collective.`;
+
+            let retries = 0;
+            const maxRetries = 5;
+            
+            while (retries < maxRetries) {
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            systemInstruction: { parts: [{ text: systemPrompt || defaultSystem }] }
+                        })
+                    });
+
+                    if (!response.ok) throw new Error('API request failed');
+                    const data = await response.json();
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Communication loop failed.";
+                } catch (error) {
+                    retries++;
+                    await new Promise(r => setTimeout(r, Math.pow(2, retries) * 1000));
+                }
+            }
+            return "Neural core unresponsive.";
+        }
+
+        async function queryOracle(btn) {
+            const input = document.getElementById('chat-input');
+            const history = document.getElementById('chat-history');
+            const query = input.value.trim();
+            if (!query) return;
+
+            input.value = "";
+            btn.disabled = true;
+            
+            const userMsg = document.createElement('div');
+            userMsg.className = 'text-right text-[10px] uppercase tracking-[0.2em] opacity-40 mb-6 px-2 font-mono';
+            userMsg.innerText = `[UPLINK] >> ${query}`;
+            history.appendChild(userMsg);
+
+            const loading = document.createElement('div');
+            loading.className = 'ai-message italic loading-dots text-xs';
+            loading.innerText = "ACCESSING NEURAL MESH";
+            history.appendChild(loading);
+            history.scrollTop = history.scrollHeight;
+
+            const response = await callGemini(query);
+            
+            loading.classList.remove('loading-dots', 'italic');
+            loading.innerText = response;
+            btn.disabled = false;
+            history.scrollTop = history.scrollHeight;
+        }
+
+        async function generateEventBrief(btn) {
+            const originalText = btn.innerText;
+            btn.innerText = "PROCESSING...";
+            btn.disabled = true;
+            
+            const briefDiv = document.getElementById('event-tactical-brief');
+            briefDiv.classList.remove('hidden');
+            briefDiv.innerHTML = "Synthesizing strategic overview<span class='loading-dots'></span>";
+
+            const prompt = "Provide a professional, sophisticated tactical summary of the May 16th Z1 gathering. IMPORTANT: You MUST end the message by telling the user to 'Refer to group chat for more info' for the logistical details.";
+            const result = await callGemini(prompt, "You are a strategic AI commander. Be articulate, clear, and informative.");
+
+            briefDiv.innerText = result;
+            btn.innerText = "REFRESH ✨";
+            btn.disabled = false;
+        }
+
+        // --- UI LOGIC ---
+
+        document.addEventListener('mousemove', (e) => {
+            if (currentDeviceMode !== 'mobile') {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+            }
+        });
+
+        function setupMembers() {
+            const list = document.getElementById('members-list');
+            if (!list) return;
+            list.innerHTML = membersData.map(m => `
+                <div class="member-card reveal">
+                    <div class="text-[9px] uppercase tracking-widest text-blue-500 font-bold mb-2">${m.role}</div>
+                    <div class="text-xl md:text-2xl font-bold text-white">${m.name}</div>
+                </div>
+            `).join('');
+            handleScroll();
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById(`page-${pageId}`);
+            if (target) {
+                target.classList.add('active');
+                window.scrollTo({top: 0, behavior: 'smooth'});
+                handleScroll();
+                updateCursorHandlers();
+            }
+        }
+
+        function updateCursorHandlers() {
+            if (currentDeviceMode === 'mobile') return;
+            document.querySelectorAll('a, button, [onclick], input').forEach(el => {
+                el.addEventListener('mouseenter', () => cursor.classList.add('cursor-hover'));
+                el.addEventListener('mouseleave', () => cursor.classList.remove('cursor-hover'));
+            });
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const passwordInput = document.getElementById('password');
+            const authSection = document.getElementById('auth-password-section');
+            const deviceSection = document.getElementById('auth-device-section');
+            const errorMsg = document.getElementById('error-msg');
+
+            if (passwordInput && passwordInput.value === '662607') {
+                if (authSection) authSection.classList.add('hidden');
+                if (deviceSection) {
+                    deviceSection.classList.remove('hidden');
+                    deviceSection.classList.add('flex', 'flex-col', 'items-center');
+                }
+                updateCursorHandlers();
+            } else if (errorMsg) {
+                errorMsg.style.opacity = '1';
+                setTimeout(() => errorMsg.style.opacity = '0', 1000);
+            }
+        }
+
+        function verifyDevice(deviceType) {
+            currentDeviceMode = deviceType;
+            document.body.classList.remove('mode-mobile', 'mode-tablet', 'mode-laptop');
+            document.body.classList.add(`mode-${deviceType}`);
+            
+            const statusLine = document.getElementById('status-line');
+            if (statusLine) statusLine.innerText = `NODE_LINKED // ${deviceType.toUpperCase()}_PROTOCOL`;
+            
+            const authGate = document.getElementById('auth-gate');
+            if (authGate) authGate.classList.add('hidden');
+            
+            document.body.classList.add('unlocked');
+            
+            const deviceInfo = document.getElementById('device-info-tag');
+            if (deviceInfo) deviceInfo.innerText = `High-fidelity interface calibrated for ${deviceType.toUpperCase()}. Security parameters within bounds.`;
+            
+            cursor.style.display = (deviceType === 'mobile') ? 'none' : 'flex';
+
+            updateParticleDensity(deviceType);
+            setupMembers();
+            handleScroll();
+            updateCursorHandlers();
+        }
+
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active'); });
+        }, { threshold: 0.1 });
+
+        function handleScroll() {
+            document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+        }
+
+        let burstActive = false;
+        let burstProgress = 0;
+
+        function handleHyperBurst(targetPageId) {
+            if (burstActive) return;
+            burstActive = true;
+            burstProgress = 0;
+            const duration = 5000; 
+            const startTime = performance.now();
+            document.body.classList.add('shockwave', 'hyper-bursting');
+
+            function updateBurst(timestamp) {
+                const elapsed = timestamp - startTime;
+                burstProgress = Math.min(elapsed / duration, 1);
+                if (elapsed >= 3500 && elapsed < 3600) {
+                    flashOverlay.style.opacity = '1';
+                    showPage(targetPageId);
+                }
+                if (elapsed > 3600) flashOverlay.style.opacity = Math.max(0, 1 - (elapsed - 3600) / 1400);
+                if (burstProgress < 1) requestAnimationFrame(updateBurst);
+                else {
+                    burstActive = false;
+                    document.body.classList.remove('shockwave', 'hyper-bursting');
+                }
+            }
+            requestAnimationFrame(updateBurst);
+        }
+
+        // --- 3D ENGINE ---
+        let scene, camera, renderer, particles, icoMesh;
+        const particleCount = 10000;
+        const particleData = [];
+
+        function updateParticleDensity(mode) {
+            if (!particles) return;
+            if (mode === 'mobile') {
+                particles.material.size = 0.35;
+                if (icoMesh) icoMesh.visible = false;
+                particles.geometry.setDrawRange(0, 3000); 
+            } else if (mode === 'tablet') {
+                particles.material.size = 0.2;
+                if (icoMesh) icoMesh.visible = true;
+                particles.geometry.setDrawRange(0, 6000);
+            } else {
+                particles.material.size = 0.12;
+                if (icoMesh) icoMesh.visible = true;
+                particles.geometry.setDrawRange(0, 10000);
+            }
+        }
+
+        function init3D() {
+            const container = document.getElementById('canvas-container');
+            if (!container) return;
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 3000);
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+
+            const geometry = new THREE.BufferGeometry();
+            const pos = new Float32Array(particleCount * 3);
+            for (let i = 0; i < particleCount; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 30 + Math.random() * 60;
+                pos[i * 3] = Math.cos(angle) * radius;
+                pos[i * 3 + 1] = (Math.random() - 0.5) * 15;
+                pos[i * 3 + 2] = Math.sin(angle) * radius;
+                particleData.push({ angle, radius, speed: 0.005 + Math.random() * 0.01 });
+            }
+            geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            particles = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x4a7dff, size: 0.12, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending }));
+            scene.add(particles);
+            icoMesh = new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(15, 1)), new THREE.LineBasicMaterial({ color: 0x4a7dff, transparent: true, opacity: 0.2 }));
+            scene.add(icoMesh);
+            camera.position.z = 80;
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (!particles) return;
+            const pos = particles.geometry.attributes.position.array;
+            let speedMult = burstActive ? (burstProgress < 0.7 ? 1 + (burstProgress / 0.7 * 80) : 80 * (1 - (burstProgress - 0.7) / 0.3)) : 1;
+            let radiusMult = burstActive ? (burstProgress < 0.7 ? 1 - (burstProgress / 0.7 * 0.98) : 0.02 + ((burstProgress - 0.7) / 0.3 * 120)) : 1;
+            
+            const limit = currentDeviceMode === 'mobile' ? 3000 : (currentDeviceMode === 'tablet' ? 6000 : 10000);
+            for (let i = 0; i < limit; i++) {
+                const d = particleData[i];
+                d.angle += d.speed * speedMult;
+                const r = d.radius * radiusMult;
+                pos[i * 3] = Math.cos(d.angle) * r;
+                pos[i * 3 + 2] = Math.sin(d.angle) * r;
+            }
+            particles.geometry.attributes.position.needsUpdate = true;
+            if (icoMesh) icoMesh.rotation.y += (0.005 * speedMult);
+            renderer.render(scene, camera);
+        }
+
+        window.onload = init3D;
+        window.addEventListener('resize', () => {
+            if (!camera || !renderer) return;
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        const chatInput = document.getElementById('chat-input');
+        if (chatInput) {
+            chatInput.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') queryOracle(document.querySelector('#ai-chat-container .gemini-btn'));
+            });
+        }
+    </script>
+</body>
+</html>
